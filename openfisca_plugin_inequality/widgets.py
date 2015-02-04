@@ -24,9 +24,9 @@ This file is part of openFisca.
 
 from datetime import datetime
 
-from openfisca_core import model
-from openfisca_core.simulations import SurveySimulation
-from openfisca_core.statshelpers import gini, lorenz, mark_weighted_percentiles
+#from openfisca_core import model
+#from openfisca_core.simulations import SurveySimulation
+from openfisca_plugin_inequality.gini import gini, lorenz  # , mark_weighted_percentiles
 from pandas import DataFrame
 
 from openfisca_qt.gui.baseconfig import get_translation
@@ -35,7 +35,7 @@ from openfisca_qt.gui.qt.QtCore import SIGNAL, Qt
 from openfisca_qt.gui.qt.QtGui import (QWidget, QDockWidget, QGroupBox, QVBoxLayout)
 from openfisca_qt.gui.qthelpers import DataFrameViewWidget, OfSs
 from openfisca_qt.widgets.matplotlibwidget import MatplotlibWidget
-from openfisca_qt import OpenfiscaPluginWidget, PluginConfigPage
+from openfisca_qt.plugins import OpenfiscaPluginWidget, PluginConfigPage
 
 
 _ = get_translation('inequality', 'openfisca_qt.plugins.survey')
@@ -48,9 +48,11 @@ class Inequality(object):
 
         self.data = DataFrame()
         self.data_default = None
-        self.vars = {'nivvie_ini': ['men'],
-                     'nivvie_net':  ['men'],
-                     'nivvie' : ['men']}
+        self.vars = {
+            'nivvie_ini': ['men'],
+            'nivvie_net': ['men'],
+            'nivvie': ['men']
+            }
 
 #        self.vars = {'nivvie_prim': ['ind', 'men'],
 #                     'nivvie_init': ['ind', 'men'],
@@ -60,14 +62,14 @@ class Inequality(object):
         self.inequality_dataframe = None
         self.poverty = None
 
-    def set_simulation(self, simulation):
+    def set_scenario(self, scenario):
         """
-        Set simulation
+        Set : scenario
         """
-        if isinstance(simulation, SurveySimulation):
-            self.simulation = simulation
+        if isinstance(scenario, SurveyScenario):
+            self.scenario = scenario
         else:
-            raise Exception('Inequality:  %s should be an instance of %s class'  %(simulation, SurveySimulation))
+            raise Exception('Inequality:  %s should be an instance of %s class'  %(scenario, SurveyScenario))
 
 
     def compute(self):

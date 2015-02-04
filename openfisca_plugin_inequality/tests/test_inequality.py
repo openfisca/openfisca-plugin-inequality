@@ -23,27 +23,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-import openfisca_france
-from openfisca_france.surveys import SurveyScenario
-from openfisca_france_data.surveys import SurveyCollection
+from openfisca_plugin_aggregates.tests.test_aggregates import create_survey_scenario
 from openfisca_plugin_inequality.inequality import Inequality
-
-
-def create_survey_scenario(year = None):
-    assert year is not None
-    openfisca_survey_collection = SurveyCollection.load(collection = "openfisca")
-    openfisca_survey = openfisca_survey_collection.surveys["openfisca_data_{}".format(year)]
-    input_data_frame = openfisca_survey.get_values(table = "input")
-    input_data_frame.reset_index(inplace = True)
-    assert "wprm" in input_data_frame.columns
-    TaxBenefitSystem = openfisca_france.init_country()
-    tax_benefit_system_class = TaxBenefitSystem
-    survey_scenario = SurveyScenario().init_from_data_frame(
-        input_data_frame = input_data_frame,
-        tax_benefit_system_class = tax_benefit_system_class,
-        year = year,
-        )
-    return survey_scenario
 
 
 def test_inequality(year = 2006):
@@ -51,12 +32,11 @@ def test_inequality(year = 2006):
     inequality = Inequality()
     inequality.set_survey_scenario(survey_scenario)
     inequality.compute()
-    print inequality.inequality_data_frame.to_string()
-    print inequality.poverty
+    return inequality.inequality_data_frame, inequality.poverty
 
 if __name__ == '__main__':
     import logging
     log = logging.getLogger(__name__)
     import sys
     logging.basicConfig(level = logging.INFO, stream = sys.stdout)
-    test_inequality()
+    inequality_data_frame, poverty =  test_inequality()

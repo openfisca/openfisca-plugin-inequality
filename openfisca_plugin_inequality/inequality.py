@@ -26,25 +26,24 @@ from datetime import datetime
 
 from pandas import DataFrame
 
-from openfisca_france.surveys import SurveyScenario
+from openfisca_france_data.surveys import SurveyScenario
 from openfisca_france_data.model.common import mark_weighted_percentiles
 from openfisca_plugin_inequality.gini import gini  # lorenz
-#from openfisca_qt.gui.baseconfig import get_translation
+# from openfisca_qt.gui.baseconfig import get_translation
 
-#_ = get_translation('inequality', 'openfisca_qt.plugins.survey') TODO: fix this
+# _ = get_translation('inequality', 'openfisca_qt.plugins.survey') TODO: fix this
 _ = lambda msg: msg
 
-class Inequality(object):
 
+class Inequality(object):
     data = None
     data_default = None
     gini = None
     inequality_data_frame = None
     poverty = None
+    survey_scenario = None
 
-    scenario = None
-
-    def __init__(self):
+    def __init__(self, survey_scenario = None):
         super(Inequality, self).__init__()
         self.data = DataFrame()
         self.vars = {
@@ -52,20 +51,26 @@ class Inequality(object):
             'nivvie_net': ['men'],
             'nivvie': ['men'],
             }
-
 #        self.vars = {'nivvie_prim': ['ind', 'men'],
 #                     'nivvie_init': ['ind', 'men'],
 #                     'nivvie_net':  ['ind', 'men'],
 #                     'nivvie' : ['ind', 'men']}
 
-    def set_survey_scenario(self, survey_scenario):
-        """
-        Set simulation
-        """
-        if isinstance(survey_scenario, SurveyScenario):
-            self.survey_scenario = survey_scenario
-        else:
-            raise Exception('Inequality: {} should be an instance of {} class'.format(survey_scenario, SurveyScenario))
+        if survey_scenario is not None:
+            self.survey_scenario(survey_scenario)
+
+    def create_description(self):
+        '''
+        Creates a description dataframe
+        '''
+        now = datetime.now()
+        descr = [
+            u'OpenFisca',
+            u'Calculé le {} à {}'.format((now.strftime('%d-%m-%Y'), now.strftime('%H:%M'))),
+            u'Système socio-fiscal au {}'.format(self.survey_scenario.simulation.datesim),
+            u"Données d'enquêtes de l'année {}".format(self.survey_scenario.survey_year),
+            ]
+        return DataFrame(descr)
 
     def compute(self):
         """
@@ -80,13 +85,13 @@ class Inequality(object):
 
         from openfisca_france_data import FILTERING_VARS
         for varname, entities in self.vars.iteritems():
-            for entity in entities:
+            for entity_key_plural in entities:
                 column = column_by_name[varname]
-                weight_name = self.survey_scenario.weight_column_name_by_entity_symbol[column.entity]
+                weight_name = self.survey_scenario.weight_column_name_by_entity_key_plural[column.entity_key_plural]
                 filter_by = FILTERING_VARS[0]
                 filter_by_name = FILTERING_VARS[0]
-                if column.entity is not 'men':
-                    filter_by_name = "{}_{}".format(filter_by, column.entity)
+                if column.entity_key_plural is not 'menages':
+                    filter_by_name = "{}_{}".format(filter_by, column.entity_key_plural)
                 val = simulation.calculate(varname)
                 weights = simulation.calculate(weight_name)
                 filter_var = simulation.calculate(filter_by_name)
@@ -120,17 +125,16 @@ class Inequality(object):
         final_df = final_df[['index', 'nivvie_ini', u"Initial à net", 'nivvie_net', u"Net à disponible", 'nivvie']]
         self.inequality_data_frame = final_df
 
-        # poverty
+        # Poverty
         poverty = dict()
         varname = "nivvie"
         for percentage in [40, 50, 60]:
-#            idx =  output.index[entity]
             varname = "pauvre" + str(percentage)
             column = column_by_name[varname]
-            weight_name = self.survey_scenario.weight_column_name_by_entity_symbol[column.entity]
+            weight_name = self.survey_scenario.weight_column_name_by_entity_key_plural[column.entity_key_plural]
             filter_by_name = FILTERING_VARS[0]
-            if column.entity is not 'men':
-                filter_by_name = "{}_{}".format(filter_by, column.entity)
+            if column.entity_key_plural is not 'menages':
+                filter_by_name = "{}_{}".format(filter_by, column.entity_key_plural)
             val = simulation.calculate(varname)
             weights = simulation.calculate(weight_name)
             filter_var = simulation.calculate(filter_by_name)
@@ -138,15 +142,11 @@ class Inequality(object):
 
         self.poverty = poverty
 
-    def create_description(self):
-        '''
-        Creates a description dataframe
-        '''
-        now = datetime.now()
-        descr = [
-            u'OpenFisca',
-            u'Calculé le {} à {}'.format((now.strftime('%d-%m-%Y'), now.strftime('%H:%M'))),
-            u'Système socio-fiscal au {}'.format(self.survey_scenario.simulation.datesim),
-            u"Données d'enquêtes de l'année {}".format(self.survey_scenario.survey_year),
-            ]
-        return DataFrame(descr)
+    def set_survey_scenario(self, survey_scenario):
+        """
+        Set simulation
+        """
+        if isinstance(survey_scenario, SurveyScenario):
+            self.survey_scenario = survey_scenario
+        else:
+            raise Exception('Inequality: {} should be an instance of {} class'.format(survey_scenario, SurveyScenario))
