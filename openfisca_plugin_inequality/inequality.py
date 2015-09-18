@@ -28,11 +28,7 @@ from pandas import DataFrame
 
 from openfisca_france_data.surveys import SurveyScenario
 from openfisca_france_data.model.common import mark_weighted_percentiles
-from openfisca_plugin_inequality.gini import gini  # lorenz
-# from openfisca_qt.gui.baseconfig import get_translation
-
-# _ = get_translation('inequality', 'openfisca_qt.plugins.survey') TODO: fix this
-_ = lambda msg: msg
+from openfisca_plugin_inequality.gini import gini
 
 
 class Inequality(object):
@@ -129,7 +125,7 @@ class Inequality(object):
         poverty = dict()
         varname = "nivvie"
         for percentage in [40, 50, 60]:
-            varname = "pauvre" + str(percentage)
+            varname = "pauvre{}".format(percentage)
             column = column_by_name[varname]
             weight_name = self.survey_scenario.weight_column_name_by_entity_key_plural[column.entity_key_plural]
             filter_by_name = FILTERING_VARS[0]

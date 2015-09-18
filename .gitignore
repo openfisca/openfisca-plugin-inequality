@@ -1,0 +1,9 @@
+.project
+.pydevproject
+.spyderproject
+.settings/
+build/
+dist/
+*.egg-info
+*.pyc
+*~

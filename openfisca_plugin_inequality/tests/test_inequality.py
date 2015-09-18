@@ -27,7 +27,7 @@ from openfisca_plugin_aggregates.tests.test_aggregates import create_survey_scen
 from openfisca_plugin_inequality.inequality import Inequality
 
 
-def test_inequality(year = 2006):
+def test_inequality(year = 2009):
     survey_scenario = create_survey_scenario(year)
     inequality = Inequality()
     inequality.set_survey_scenario(survey_scenario)
@@ -39,4 +39,4 @@ if __name__ == '__main__':
     log = logging.getLogger(__name__)
     import sys
     logging.basicConfig(level = logging.INFO, stream = sys.stdout)
-    inequality_data_frame, poverty =  test_inequality()
+    inequality_data_frame, poverty = test_inequality()
